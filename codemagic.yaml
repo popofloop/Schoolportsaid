@@ -13,16 +13,26 @@ workflows:
       - name: Extract Project Files
         script: |
           unzip -o portsaidschol.zip
-      - name: Set up local.properties
-        script: |
-          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
       - name: Fix and Build Android APK
         script: |
-          # إصلاح أي مشاكل في صيغة الملفات الناتجة عن الضغط من الويندوز
+          # البحث عن المجلد المكتشف الذي يحتوي على ملف gradlew
+          GRADLEW_PATH=$(find . -name "gradlew" -maxdepth 3 | head -n 1)
+          
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "Error: gradlew file not found anywhere in the extracted files!"
+            exit 1
+          fi
+          
+          # الانتقال إلى المجلد الصحيح تلقائياً
+          PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+          cd "$PROJECT_DIR"
+          
+          # إنشاء ملف local.properties في المسار الصحيح
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+          
+          # إصلاح علامات الويندوز وإعطاء الصلاحيات وتشغيل البناء
           sed -i '' 's/\r$//' gradlew || sed -i 's/\r$//' gradlew
-          # إعطاء صلاحيات التشغيل الكاملة للملف
           chmod +x gradlew
-          # تشغيل البناء المباشر
           ./gradlew assembleRelease
     artifacts:
-      - app/build/outputs/apk/release/*.apk
+      - "**/build/outputs/apk/release/*.apk"
