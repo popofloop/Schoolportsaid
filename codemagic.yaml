@@ -13,9 +13,8 @@ workflows:
       - name: Extract Project Files
         script: |
           unzip -o portsaidschol.zip
-      - name: Generate Missing Gradle and Build
+      - name: Generate Gradle Version 9.3.1 and Build
         script: |
-          # البحث عن المجلد اللي جواه ملف build.gradle أو build.gradle.kts
           BUILD_FILE=$(find . -name "build.gradle*" -maxdepth 3 | head -n 1)
           
           if [ -z "$BUILD_FILE" ]; then
@@ -24,7 +23,6 @@ workflows:
           fi
           
           PROJECT_DIR=$(dirname "$BUILD_FILE")
-          # لو الملف جوة فولدر app، بنرجع خطوة لورا للمجلد الرئيسي للمشروع
           if [[ "$PROJECT_DIR" == */app ]]; then
             PROJECT_DIR=$(dirname "$PROJECT_DIR")
           fi
@@ -34,8 +32,10 @@ workflows:
           # إنشاء ملف local.properties
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           
-          # توليد ملفات gradle وتشغيل البناء فوراً
-          gradle wrapper
+          # توليد ملفات Gradle بالإصدار المطلوب بالظبط لحل التوافق
+          gradle wrapper --gradle-version 9.3.1
+          
+          # تشغيل البناء
           chmod +x gradlew
           ./gradlew assembleRelease
     artifacts:
