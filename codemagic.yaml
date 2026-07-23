@@ -35,14 +35,13 @@ workflows:
           # توليد ملفات Gradle بالإصدار المتوافق
           gradle wrapper --gradle-version 9.3.1
           
-          # إنشاء مفتاح توقيع مؤقت وافتراضي جديد تماماً عشان الموبايل ما يعترضش عليه
-          keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android || true
+          # توليد ملف المفتاح في المجلد الرئيسي للمشروع مباشرة وبنفس الاسم المطلوب
+          keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US" || true
           
-          # نقل المفتاح للمكان اللي الـ Gradle بيدور فيه أوتوماتيكياً
-          mkdir -p ~/.android/
-          cp debug.keystore ~/.android/debug.keystore || true
+          # تأكيد وجود ملف المفتاح في مجلد app أيضاً احتياطياً
+          cp debug.keystore app/debug.keystore || true
           
-          # تشغيل البناء النهائي لنسخة الـ Debug الموقعة تلقائياً
+          # تشغيل البناء النهائي لنسخة الـ Debug
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
     artifacts:
