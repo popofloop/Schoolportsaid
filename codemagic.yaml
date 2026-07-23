@@ -13,25 +13,29 @@ workflows:
       - name: Extract Project Files
         script: |
           unzip -o portsaidschol.zip
-      - name: Fix and Build Android APK
+      - name: Generate Missing Gradle and Build
         script: |
-          # البحث عن المجلد المكتشف الذي يحتوي على ملف gradlew
-          GRADLEW_PATH=$(find . -name "gradlew" -maxdepth 3 | head -n 1)
+          # البحث عن المجلد اللي جواه ملف build.gradle أو build.gradle.kts
+          BUILD_FILE=$(find . -name "build.gradle*" -maxdepth 3 | head -n 1)
           
-          if [ -z "$GRADLEW_PATH" ]; then
-            echo "Error: gradlew file not found anywhere in the extracted files!"
+          if [ -z "$BUILD_FILE" ]; then
+            echo "Error: Standard Android project files not found!"
             exit 1
           fi
           
-          # الانتقال إلى المجلد الصحيح تلقائياً
-          PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+          PROJECT_DIR=$(dirname "$BUILD_FILE")
+          # لو الملف جوة فولدر app، بنرجع خطوة لورا للمجلد الرئيسي للمشروع
+          if [[ "$PROJECT_DIR" == */app ]]; then
+            PROJECT_DIR=$(dirname "$PROJECT_DIR")
+          fi
+          
           cd "$PROJECT_DIR"
           
-          # إنشاء ملف local.properties في المسار الصحيح
+          # إنشاء ملف local.properties
           echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
           
-          # إصلاح علامات الويندوز وإعطاء الصلاحيات وتشغيل البناء
-          sed -i '' 's/\r$//' gradlew || sed -i 's/\r$//' gradlew
+          # توليد ملفات gradle وتشغيل البناء فوراً
+          gradle wrapper
           chmod +x gradlew
           ./gradlew assembleRelease
     artifacts:
